@@ -1,0 +1,30 @@
+---
+- name: Validate AAP connectivity to enterprise RHEL hosts
+  hosts: rhel
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Verify Ansible connectivity
+      ansible.builtin.ping:
+
+    - name: Verify privilege escalation
+      ansible.builtin.command:
+        cmd: id -u
+      register: root_check
+      changed_when: false
+
+    - name: Assert execution has root privileges
+      ansible.builtin.assert:
+        that:
+          - root_check.stdout == "0"
+        fail_msg: "Privilege escalation failed on {{ inventory_hostname }}"
+        success_msg: "Privilege escalation verified on {{ inventory_hostname }}"
+
+    - name: Display managed host information
+      ansible.builtin.debug:
+        msg:
+          - "Host={{ inventory_hostname }}"
+          - "OS={{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "Kernel={{ ansible_kernel }}"
+          - "Architecture={{ ansible_architecture }}"

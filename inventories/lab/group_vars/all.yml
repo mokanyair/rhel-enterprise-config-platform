@@ -1,0 +1,20 @@
+---
+ansible_user: ec2-user
+ansible_become: true
+ansible_become_method: sudo
+
+enterprise_environment: lab
+
+# AWS EC2 Time Sync
+enterprise_ntp_servers:
+  - hostname: 169.254.169.123
+    iburst: true
+
+# Central logging
+enterprise_log_server: 10.20.10.22
+
+# High-risk features remain disabled until their implementation steps.
+enterprise_manage_storage: false
+enterprise_manage_firewall: false
+enterprise_manage_logging: false
+enterprise_manage_monitoring: false

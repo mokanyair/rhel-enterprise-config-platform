@@ -1,0 +1,25 @@
+# Secrets
+*.pem
+*.key
+*.p12
+*.pfx
+LAB_VAULT_PASSWORD
+vault-password*
+.env
+
+# Ansible
+*.retry
+.cache/
+collections/ansible_collections/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

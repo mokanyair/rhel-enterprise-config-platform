@@ -1,0 +1,72 @@
+---
+all:
+  children:
+
+    rhel:
+      hosts:
+        rhel01:
+          ansible_host: 10.20.10.21
+        rhel02:
+          ansible_host: 10.20.10.22
+        rhel03:
+          ansible_host: 10.20.10.23
+        rhel04:
+          ansible_host: 10.20.10.24
+        rhel05:
+          ansible_host: 10.20.10.25
+
+    env_production:
+      hosts:
+        rhel01:
+        rhel02:
+        rhel03:
+
+    env_test:
+      hosts:
+        rhel04:
+        rhel05:
+
+    role_web:
+      hosts:
+        rhel01:
+
+    role_logging:
+      hosts:
+        rhel02:
+
+    role_application:
+      hosts:
+        rhel03:
+        rhel04:
+
+    role_monitoring:
+      hosts:
+        rhel05:
+
+    criticality_tier1:
+      hosts:
+        rhel01:
+        rhel02:
+        rhel03:
+
+    criticality_tier2:
+      hosts:
+        rhel04:
+        rhel05:
+
+    rollout_canary:
+      hosts:
+        rhel01:
+
+    rollout_wave1:
+      hosts:
+        rhel02:
+        rhel03:
+
+    rollout_wave2:
+      hosts:
+        rhel04:
+
+    rollout_wave3:
+      hosts:
+        rhel05:

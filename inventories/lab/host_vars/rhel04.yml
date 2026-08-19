@@ -1,0 +1,7 @@
+---
+enterprise_lvm_device: /dev/nvme1n1
+enterprise_lvm_vg: vg_app
+enterprise_lvm_lv: lv_data
+enterprise_lvm_size: 8g
+enterprise_lvm_mount: /app/data
+enterprise_lvm_fstype: xfs

@@ -1,0 +1,10 @@
+---
+- name: Manage enterprise users and sudo
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default('25%') }}"
+
+  roles:
+    - role: user_management
+    - role: sudo_management

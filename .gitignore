@@ -1,25 +1,46 @@
-# Secrets
+# -------------------------
+# Secrets / credentials
+# -------------------------
 *.pem
 *.key
 *.p12
 *.pfx
-LAB_VAULT_PASSWORD
+*.crt.key
 vault-password*
+LAB_VAULT_PASSWORD
 .env
+.env.*
+*token*
+!docs/**/*token*
 
-# Ansible
+# -------------------------
+# Ansible runtime artifacts
+# -------------------------
 *.retry
 .cache/
-collections/ansible_collections/
+.fact_cache/
 
+# Generated Ansible Builder content
+execution-environment/context/
+
+# -------------------------
 # Python
+# -------------------------
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
 
+# -------------------------
 # Editors
+# -------------------------
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# OS
+# -------------------------
+# OS files
+# -------------------------
 .DS_Store
 Thumbs.db

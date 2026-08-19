@@ -1,0 +1,22 @@
+---
+- name: Deploy enterprise SSH hardening configuration
+  ansible.builtin.template:
+    src: 99-enterprise-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/99-enterprise-hardening.conf
+    owner: root
+    group: root
+    mode: "0600"
+    backup: true
+  notify: Reload sshd
+
+- name: Validate complete SSH configuration
+  ansible.builtin.command:
+    cmd: /usr/sbin/sshd -t
+  changed_when: false
+
+- name: Apply SSH handler before continuing
+  ansible.builtin.meta: flush_handlers
+
+- name: Verify Ansible can reconnect after SSH change
+  ansible.builtin.wait_for_connection:
+    timeout: 30

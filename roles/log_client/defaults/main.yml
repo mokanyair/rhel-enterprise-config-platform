@@ -1,0 +1,4 @@
+---
+enterprise_log_server: 10.20.10.22
+enterprise_log_port: 514
+enterprise_log_protocol: tcp

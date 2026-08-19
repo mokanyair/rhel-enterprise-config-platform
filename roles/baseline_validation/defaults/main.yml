@@ -1,0 +1,9 @@
+---
+validation_required_users:
+  - linuxadmin01
+  - linuxadmin02
+
+validation_required_packages:
+  - curl
+  - rsync
+  - lsof

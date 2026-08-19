@@ -1,0 +1,22 @@
+---
+- name: Configure enterprise SELinux baseline
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default('25%') }}"
+
+  roles:
+    - role: selinux_baseline
+
+  post_tasks:
+    - name: Read SELinux enforcement mode
+      ansible.builtin.command:
+        cmd: /usr/sbin/getenforce
+      register: selinux_mode
+      changed_when: false
+
+    - name: Validate SELinux enforcing
+      ansible.builtin.assert:
+        that:
+          - selinux_mode.stdout | trim == 'Enforcing'
+        fail_msg: "SELinux is not enforcing on {{ inventory_hostname }}"

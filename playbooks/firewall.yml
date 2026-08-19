@@ -1,0 +1,22 @@
+---
+- name: Configure enterprise firewall baseline
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default(1) }}"
+  any_errors_fatal: true
+
+  roles:
+    - role: firewall_baseline
+
+  post_tasks:
+    - name: Verify SSH remains allowed
+      ansible.builtin.command:
+        cmd: firewall-cmd --zone={{ enterprise_firewall_zone }} --query-service=ssh
+      register: ssh_firewall_check
+      changed_when: false
+      failed_when: ssh_firewall_check.rc != 0
+
+    - name: Confirm Ansible connectivity after firewall change
+      ansible.builtin.wait_for_connection:
+        timeout: 30

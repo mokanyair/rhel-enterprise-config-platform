@@ -1,0 +1,211 @@
+---
+# -------------------------
+# Packages
+# -------------------------
+
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Validate required packages
+  ansible.builtin.assert:
+    that:
+      - item in ansible_facts.packages
+    fail_msg: "Required package {{ item }} is missing."
+  loop: "{{ validation_required_packages }}"
+
+# -------------------------
+# Users
+# -------------------------
+
+- name: Check required administrator accounts
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ item }}"
+  loop: "{{ validation_required_users }}"
+  register: validated_users
+  failed_when: false
+
+- name: Validate administrator accounts exist
+  ansible.builtin.assert:
+    that:
+      - item.ansible_facts.getent_passwd | length > 0
+    fail_msg: "Required administrator account is missing."
+  loop: "{{ validated_users.results }}"
+
+# -------------------------
+# Sudo
+# -------------------------
+
+- name: Validate sudo configuration
+  ansible.builtin.command:
+    cmd: /usr/sbin/visudo -c
+  register: sudo_validation
+  changed_when: false
+
+- name: Assert sudo configuration is valid
+  ansible.builtin.assert:
+    that:
+      - sudo_validation.rc == 0
+    fail_msg: "Sudo configuration validation failed."
+
+# -------------------------
+# SSH
+# -------------------------
+
+- name: Validate sshd configuration
+  ansible.builtin.command:
+    cmd: /usr/sbin/sshd -t
+  register: ssh_validation
+  changed_when: false
+
+- name: Assert sshd configuration is valid
+  ansible.builtin.assert:
+    that:
+      - ssh_validation.rc == 0
+    fail_msg: "SSH configuration validation failed."
+
+# -------------------------
+# SELinux
+# -------------------------
+
+- name: Read SELinux status
+  ansible.builtin.command:
+    cmd: /usr/sbin/getenforce
+  register: selinux_validation
+  changed_when: false
+
+- name: Validate SELinux is enforcing
+  ansible.builtin.assert:
+    that:
+      - selinux_validation.stdout | trim == "Enforcing"
+    fail_msg: "SELinux is not enforcing."
+
+# -------------------------
+# Firewalld
+# -------------------------
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Validate firewalld service
+  ansible.builtin.assert:
+    that:
+      - "'firewalld.service' in ansible_facts.services"
+      - ansible_facts.services['firewalld.service'].state == 'running'
+    fail_msg: "firewalld is not running."
+
+- name: Validate SSH firewall service
+  ansible.builtin.command:
+    cmd: firewall-cmd --zone={{ enterprise_firewall_zone | default('public') }} --query-service=ssh
+  register: firewall_ssh_validation
+  changed_when: false
+  failed_when: false
+
+- name: Assert SSH is permitted through firewalld
+  ansible.builtin.assert:
+    that:
+      - firewall_ssh_validation.rc == 0
+    fail_msg: "SSH is not allowed through firewalld."
+
+# -------------------------
+# LVM / filesystem
+# -------------------------
+
+- name: Check logical volume
+  ansible.builtin.command:
+    cmd: lvs --noheadings -o lv_name {{ enterprise_lvm_vg }}
+  register: lvm_validation
+  changed_when: false
+  failed_when: false
+  when: enterprise_manage_storage | default(false) | bool
+
+- name: Validate logical volume exists
+  ansible.builtin.assert:
+    that:
+      - enterprise_lvm_lv in lvm_validation.stdout
+    fail_msg: "Expected logical volume does not exist."
+  when: enterprise_manage_storage | default(false) | bool
+
+- name: Gather mount facts
+  ansible.builtin.setup:
+    gather_subset:
+      - mounts
+  when: enterprise_manage_storage | default(false) | bool
+
+- name: Validate managed filesystem is mounted
+  ansible.builtin.assert:
+    that:
+      - enterprise_lvm_mount in ansible_facts.mounts | map(attribute='mount') | list
+    fail_msg: "{{ enterprise_lvm_mount }} is not mounted."
+  when: enterprise_manage_storage | default(false) | bool
+
+# -------------------------
+# NTP
+# -------------------------
+
+- name: Check chrony tracking
+  ansible.builtin.command:
+    cmd: chronyc tracking
+  register: chrony_validation
+  changed_when: false
+  failed_when: false
+
+- name: Validate chrony is synchronized
+  ansible.builtin.assert:
+    that:
+      - chrony_validation.rc == 0
+      - "'Leap status' in chrony_validation.stdout"
+      - "'Not synchronised' not in chrony_validation.stdout"
+    fail_msg: "Time synchronization validation failed."
+
+# -------------------------
+# Sysctl
+# -------------------------
+
+- name: Read managed sysctl parameters
+  ansible.builtin.command:
+    cmd: "sysctl -n {{ item.name }}"
+  loop: "{{ enterprise_sysctl_settings }}"
+  register: sysctl_validation
+  changed_when: false
+
+- name: Validate managed sysctl parameters
+  ansible.builtin.assert:
+    that:
+      - item.stdout | trim == item.item.value | string
+    fail_msg: >-
+      Sysctl parameter {{ item.item.name }}
+      does not match desired value {{ item.item.value }}.
+  loop: "{{ sysctl_validation.results }}"
+
+# -------------------------
+# Logging
+# -------------------------
+
+- name: Validate rsyslog service
+  ansible.builtin.assert:
+    that:
+      - "'rsyslog.service' in ansible_facts.services"
+      - ansible_facts.services['rsyslog.service'].state == 'running'
+    fail_msg: "rsyslog is not running."
+
+- name: Validate rsyslog configuration
+  ansible.builtin.command:
+    cmd: rsyslogd -N1
+  register: rsyslog_validation
+  changed_when: false
+
+# -------------------------
+# Monitoring
+# -------------------------
+
+- name: Validate monitoring service
+  ansible.builtin.assert:
+    that:
+      - "(monitoring_service + '.service') in ansible_facts.services"
+      - "ansible_facts.services[monitoring_service + '.service'].state == 'running'"
+    fail_msg: "Monitoring agent is not running."
+  when:
+    - enterprise_manage_monitoring | default(false) | bool
+    - monitoring_service | default('') | length > 0

@@ -1,0 +1,33 @@
+---
+- name: Ensure rsyslog is installed
+  ansible.builtin.package:
+    name: rsyslog
+    state: present
+
+- name: Create remote log directory
+  ansible.builtin.file:
+    path: /var/log/remote
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy central rsyslog configuration
+  ansible.builtin.template:
+    src: 10-enterprise-log-server.conf.j2
+    dest: /etc/rsyslog.d/10-enterprise-log-server.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart rsyslog
+
+- name: Validate rsyslog configuration
+  ansible.builtin.command:
+    cmd: rsyslogd -N1
+  changed_when: false
+
+- name: Ensure rsyslog is enabled and running
+  ansible.builtin.systemd_service:
+    name: rsyslog
+    state: started
+    enabled: true

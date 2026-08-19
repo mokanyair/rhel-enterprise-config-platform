@@ -1,0 +1,14 @@
+# Managed by Ansible
+
+action(
+  type="omfwd"
+  target="{{ enterprise_log_server }}"
+  port="{{ enterprise_log_port }}"
+  protocol="{{ enterprise_log_protocol }}"
+
+  queue.type="LinkedList"
+  queue.filename="enterprise_forwarding"
+  queue.saveOnShutdown="on"
+
+  action.resumeRetryCount="-1"
+)

@@ -1,0 +1,10 @@
+---
+- name: Apply enterprise SSH hardening
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default(1) }}"
+  any_errors_fatal: true
+
+  roles:
+    - role: ssh_hardening

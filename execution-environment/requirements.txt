@@ -1,0 +1,6 @@
+# Project-specific Python dependencies.
+#
+# Collection-specific Python requirements are discovered automatically
+# by ansible-builder during collection introspection.
+
+packaging

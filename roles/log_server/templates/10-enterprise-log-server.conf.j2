@@ -1,0 +1,17 @@
+# Managed by Ansible
+
+module(load="imtcp")
+
+input(
+  type="imtcp"
+  port="{{ enterprise_log_port }}"
+)
+
+template(
+  name="RemoteHostLogs"
+  type="string"
+  string="/var/log/remote/%HOSTNAME%/%PROGRAMNAME%.log"
+)
+
+*.* ?RemoteHostLogs
+& stop

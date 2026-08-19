@@ -1,0 +1,9 @@
+---
+enterprise_manage_firewall: true
+
+enterprise_firewall_zone: public
+
+enterprise_firewall_services:
+  - ssh
+
+enterprise_firewall_ports: []

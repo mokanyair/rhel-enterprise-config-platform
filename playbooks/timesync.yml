@@ -1,0 +1,23 @@
+---
+- name: Configure enterprise time synchronization
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default('25%') }}"
+
+  vars:
+    timesync_ntp_servers: "{{ enterprise_ntp_servers }}"
+
+  roles:
+    - role: redhat.rhel_system_roles.timesync
+
+  post_tasks:
+    - name: Check chrony synchronization
+      ansible.builtin.command:
+        cmd: chronyc tracking
+      register: chrony_tracking
+      changed_when: false
+
+    - name: Display synchronization status
+      ansible.builtin.debug:
+        var: chrony_tracking.stdout_lines

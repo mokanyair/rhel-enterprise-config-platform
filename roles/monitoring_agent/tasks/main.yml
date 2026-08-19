@@ -1,0 +1,35 @@
+---
+- name: Validate monitoring configuration
+  ansible.builtin.assert:
+    that:
+      - monitoring_package | length > 0
+      - monitoring_service | length > 0
+    fail_msg: >-
+      monitoring_package and monitoring_service
+      must be defined before monitoring is enabled.
+  when: enterprise_manage_monitoring | bool
+
+- name: Install monitoring agent
+  ansible.builtin.package:
+    name: "{{ monitoring_package }}"
+    state: present
+  when: enterprise_manage_monitoring | bool
+
+- name: Deploy monitoring configuration
+  ansible.builtin.template:
+    src: "{{ monitoring_config_template }}"
+    dest: "{{ monitoring_config_destination }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart monitoring agent
+  when:
+    - enterprise_manage_monitoring | bool
+    - monitoring_config_enabled | bool
+
+- name: Ensure monitoring agent is enabled and running
+  ansible.builtin.systemd_service:
+    name: "{{ monitoring_service }}"
+    state: started
+    enabled: true
+  when: enterprise_manage_monitoring | bool

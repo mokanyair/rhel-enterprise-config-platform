@@ -1,0 +1,9 @@
+---
+- name: Ensure approved administrator accounts exist
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: "{{ item.groups | default(omit) }}"
+    append: true
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ enterprise_admin_users }}"

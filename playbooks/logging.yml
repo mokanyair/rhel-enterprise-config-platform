@@ -1,0 +1,17 @@
+---
+- name: Configure central logging server
+  hosts: role_logging
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: log_server
+
+- name: Configure centralized logging clients
+  hosts: rhel:!role_logging
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default('25%') }}"
+
+  roles:
+    - role: log_client

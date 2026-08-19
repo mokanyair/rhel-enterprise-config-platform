@@ -1,0 +1,5 @@
+---
+enterprise_sudo_rules:
+  - name: linux-admins
+    content: |
+      %wheel ALL=(ALL) ALL

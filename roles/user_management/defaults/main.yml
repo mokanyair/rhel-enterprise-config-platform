@@ -1,0 +1,13 @@
+---
+enterprise_admin_users:
+  - name: linuxadmin01
+    groups:
+      - wheel
+    shell: /bin/bash
+    state: present
+
+  - name: linuxadmin02
+    groups:
+      - wheel
+    shell: /bin/bash
+    state: present

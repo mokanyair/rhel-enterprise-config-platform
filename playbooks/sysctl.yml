@@ -1,0 +1,26 @@
+---
+- name: Configure enterprise kernel parameters
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default('25%') }}"
+
+  roles:
+    - role: sysctl_management
+
+  post_tasks:
+    - name: Read configured kernel parameters
+      ansible.builtin.command:
+        cmd: "sysctl -n {{ item.name }}"
+      loop: "{{ enterprise_sysctl_settings }}"
+      register: sysctl_runtime
+      changed_when: false
+
+    - name: Validate configured kernel parameters
+      ansible.builtin.assert:
+        that:
+          - item.stdout | trim == item.item.value | string
+        fail_msg: >-
+          Kernel parameter {{ item.item.name }} does not have
+          the expected value {{ item.item.value }}.
+      loop: "{{ sysctl_runtime.results }}"

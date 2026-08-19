@@ -1,0 +1,9 @@
+---
+- name: Validate enterprise RHEL baseline
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default('25%') }}"
+
+  roles:
+    - role: baseline_validation

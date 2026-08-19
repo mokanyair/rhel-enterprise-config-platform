@@ -1,0 +1,7 @@
+---
+baseline_packages:
+  - curl
+  - rsync
+  - lsof
+
+baseline_removed_packages: []

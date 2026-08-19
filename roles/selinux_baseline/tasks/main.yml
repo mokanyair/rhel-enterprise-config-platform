@@ -1,0 +1,12 @@
+---
+- name: Ensure SELinux support packages are installed
+  ansible.builtin.package:
+    name:
+      - policycoreutils
+      - python3-libselinux
+    state: present
+
+- name: Enforce approved SELinux state
+  ansible.posix.selinux:
+    policy: "{{ selinux_policy }}"
+    state: "{{ selinux_state }}"

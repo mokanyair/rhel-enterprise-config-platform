@@ -1,0 +1,32 @@
+---
+- name: Ensure firewalld packages are installed
+  ansible.builtin.package:
+    name:
+      - firewalld
+      - python3-firewall
+    state: present
+
+- name: Ensure firewalld is enabled and running
+  ansible.builtin.systemd_service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Allow approved firewall services
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    zone: "{{ enterprise_firewall_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ enterprise_firewall_services }}"
+
+- name: Allow approved firewall ports
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    zone: "{{ enterprise_firewall_zone }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ enterprise_firewall_ports }}"
+  when: enterprise_firewall_ports | length > 0

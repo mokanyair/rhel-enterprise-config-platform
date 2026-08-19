@@ -1,0 +1,11 @@
+---
+enterprise_manage_monitoring: false
+
+monitoring_package: ""
+monitoring_service: ""
+
+monitoring_config_enabled: false
+monitoring_config_template: ""
+monitoring_config_destination: ""
+
+monitoring_validation_port: 0

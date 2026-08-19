@@ -1,0 +1,78 @@
+---
+- name: Validate storage automation inputs
+  ansible.builtin.assert:
+    that:
+      - enterprise_lvm_device is defined
+      - enterprise_lvm_device | length > 0
+      - enterprise_lvm_device != "/dev/nvme0n1"
+      - enterprise_lvm_mount != "/"
+      - enterprise_lvm_vg | length > 0
+      - enterprise_lvm_lv | length > 0
+    fail_msg: "Storage safety validation failed."
+
+- name: Check that requested storage device exists
+  ansible.builtin.stat:
+    path: "{{ enterprise_lvm_device }}"
+  register: lvm_device
+
+- name: Stop if requested storage device does not exist
+  ansible.builtin.assert:
+    that:
+      - lvm_device.stat.exists
+      - lvm_device.stat.isblk | default(false)
+    fail_msg: "{{ enterprise_lvm_device }} is not a valid block device."
+
+- name: Check existing filesystem signature
+  ansible.builtin.command:
+    cmd: "lsblk -no FSTYPE {{ enterprise_lvm_device }}"
+  register: existing_fstype
+  changed_when: false
+
+- name: Protect device containing an existing filesystem
+  ansible.builtin.assert:
+    that:
+      - existing_fstype.stdout | trim == ""
+    fail_msg: >-
+      {{ enterprise_lvm_device }} already contains a filesystem.
+      Refusing automatic initialization.
+
+- name: Ensure LVM and XFS packages are installed
+  ansible.builtin.package:
+    name:
+      - lvm2
+      - xfsprogs
+    state: present
+
+- name: Create LVM volume group
+  community.general.lvg:
+    vg: "{{ enterprise_lvm_vg }}"
+    pvs: "{{ enterprise_lvm_device }}"
+    state: present
+
+- name: Create logical volume
+  community.general.lvol:
+    vg: "{{ enterprise_lvm_vg }}"
+    lv: "{{ enterprise_lvm_lv }}"
+    size: "{{ enterprise_lvm_size }}"
+    state: present
+
+- name: Create filesystem
+  community.general.filesystem:
+    fstype: "{{ enterprise_lvm_fstype }}"
+    dev: "/dev/{{ enterprise_lvm_vg }}/{{ enterprise_lvm_lv }}"
+
+- name: Create mount point
+  ansible.builtin.file:
+    path: "{{ enterprise_lvm_mount }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Mount filesystem and persist in fstab
+  ansible.posix.mount:
+    path: "{{ enterprise_lvm_mount }}"
+    src: "/dev/{{ enterprise_lvm_vg }}/{{ enterprise_lvm_lv }}"
+    fstype: "{{ enterprise_lvm_fstype }}"
+    opts: defaults
+    state: mounted

@@ -1,0 +1,12 @@
+---
+- name: Install approved baseline packages
+  ansible.builtin.package:
+    name: "{{ baseline_packages }}"
+    state: present
+  when: baseline_packages | length > 0
+
+- name: Remove prohibited packages
+  ansible.builtin.package:
+    name: "{{ baseline_removed_packages }}"
+    state: absent
+  when: baseline_removed_packages | length > 0

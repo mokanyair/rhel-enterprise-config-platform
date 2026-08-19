@@ -1,0 +1,27 @@
+---
+- name: Configure enterprise LVM storage
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: 1
+  any_errors_fatal: true
+
+  pre_tasks:
+    - name: Require explicit storage management approval
+      ansible.builtin.assert:
+        that:
+          - enterprise_manage_storage | bool
+        fail_msg: >-
+          Storage management is disabled.
+          Set enterprise_manage_storage=true explicitly.
+
+    - name: Require explicit disk initialization approval
+      ansible.builtin.assert:
+        that:
+          - enterprise_storage_allow_initialize | bool
+        fail_msg: >-
+          Disk initialization has not been approved.
+          Set enterprise_storage_allow_initialize=true explicitly.
+
+  roles:
+    - role: storage_management

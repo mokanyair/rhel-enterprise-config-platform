@@ -1,0 +1,16 @@
+# Python runtime/build dependencies
+python3 [platform:rpm]
+python3-pip [platform:rpm]
+python3-setuptools [platform:rpm]
+python3-devel [platform:rpm]
+
+# Native compilation dependencies required by Python packages
+gcc [platform:rpm]
+pkgconf-pkg-config [platform:rpm]
+
+# Required by systemd-python discovered from RHEL system roles
+systemd-devel [platform:rpm]
+
+# Remote connectivity
+openssh-clients [platform:rpm]
+sshpass [platform:rpm]

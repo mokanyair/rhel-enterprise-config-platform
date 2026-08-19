@@ -1,0 +1,34 @@
+---
+- name: Configure enterprise monitoring agent
+  hosts: rhel
+  become: true
+  gather_facts: true
+  serial: "{{ rollout_serial | default('25%') }}"
+
+  roles:
+    - role: monitoring_agent
+
+  post_tasks:
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+      when: enterprise_manage_monitoring | bool
+
+    - name: Verify monitoring service exists and is running
+      ansible.builtin.assert:
+        that:
+          - "(monitoring_service + '.service') in ansible_facts.services"
+          - "ansible_facts.services[monitoring_service + '.service'].state == 'running'"
+        fail_msg: >-
+          Monitoring service {{ monitoring_service }}
+          is not running on {{ inventory_hostname }}.
+      when: enterprise_manage_monitoring | bool
+
+    - name: Verify monitoring port is listening
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ monitoring_validation_port }}"
+        timeout: 10
+      when:
+        - enterprise_manage_monitoring | bool
+        - monitoring_validation_port | int > 0
